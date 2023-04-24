@@ -1,22 +1,17 @@
 import { GithubOutlined } from '@ant-design/icons';
 import { DefaultFooter } from '@ant-design/pro-components';
+import {PLANET_LINK} from "@/constant";
 const Footer: React.FC = () => {
-  const defaultMessage = '蚂蚁集团体验技术部出品';
+  const defaultMessage= 'Scintilla出品';
   const currentYear = new Date().getFullYear();
   return (
     <DefaultFooter
       copyright={`${currentYear} ${defaultMessage}`}
       links={[
         {
-          key: 'Ant Design Pro',
-          title: 'Ant Design Pro',
-          href: 'https://pro.ant.design',
-          blankTarget: true,
-        },
-        {
-          key: 'github',
-          title: <GithubOutlined />,
-          href: 'https://github.com/ant-design/ant-design-pro',
+          key: 'yhzx',
+          title: '嘻精的用户中心',
+          href: PLANET_LINK,
           blankTarget: true,
         },
         {
@@ -25,6 +20,13 @@ const Footer: React.FC = () => {
           href: 'https://ant.design',
           blankTarget: true,
         },
+        {
+          key: 'github',
+          title: <><GithubOutlined /> 嘻精 GitHub</>,
+          href: 'https://github.com/ant-design/ant-design-pro',
+          blankTarget: true,
+        },
+
       ]}
     />
   );

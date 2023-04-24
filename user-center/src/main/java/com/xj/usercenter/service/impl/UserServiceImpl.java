@@ -39,10 +39,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     
     
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         // 1.校验
         // 1.1 账号密码，确认密码不为空
-        if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)) {
+        if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword,planetCode)) {
             // todo 修改为自定义异常类
             return -1;
         }
@@ -52,6 +52,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 1.3密码大于8
         if (userPassword.length() < 8) {
+            return -1;
+        }
+        if (planetCode.length() > 5) {
             return -1;
         }
         
@@ -75,6 +78,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (count > 0) {
             return -1;
         }
+    
+        // 1.7星球账户不能重复
+        // 通过QueryWrapper比较参数
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("planetCode", planetCode);
+        // count需要传入QueryWrapper参数，根据 Wrapper 条件，查询总记录数
+        count = this.count(queryWrapper);
+        if (count > 0) {
+            return -1;
+        }
         
         // 2.加密
         // 给加密字段加盐
@@ -85,6 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
+        user.setPlanetCode(planetCode);
         boolean saveResult = this.save(user);
         // 判断是否插入成功
         if (!saveResult) {

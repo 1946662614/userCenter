@@ -44,11 +44,11 @@ public class UserController {
         String checkPassword = userRegisterRequest.getCheckPassword();
         String planetCode = userRegisterRequest.getPlanetCode();
         // 校验三个参数是否为空，为空直接返回
-        if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)) {
+        if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword,planetCode)) {
             return null;
         }
         // 调用注册方法
-        return userService.userRegister(userAccount, userPassword, checkPassword);
+        return userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
     }
     
     @PostMapping("/login")
