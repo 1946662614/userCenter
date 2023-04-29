@@ -1,7 +1,12 @@
 package com.xj.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.xj.usercenter.common.BaseResponse;
+import com.xj.usercenter.common.ErrorCode;
+import com.xj.usercenter.common.ResultUtils;
 import com.xj.usercenter.constant.UserConstant;
+import com.xj.usercenter.exception.BusinessException;
 import com.xj.usercenter.model.domain.User;
 import com.xj.usercenter.model.request.UserLoginRequest;
 import com.xj.usercenter.model.request.UserRegisterRequest;
@@ -33,10 +38,11 @@ public class UserController {
     
     @PostMapping("/register")
     // 要@RequestBody注解之后，mvc框架才会将数据与前端传来的参数关联在一起
-    public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         // 判断是否为空
         if (userRegisterRequest == null) {
-            return null;
+//            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 在userRegisterRequest中取得数据，再填入userRegister方法
         String userAccount = userRegisterRequest.getUserAccount();
@@ -48,36 +54,40 @@ public class UserController {
             return null;
         }
         // 调用注册方法
-        return userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+//        return new BaseResponse<>(0,result,"ok");
+        return ResultUtils.success(result);
     }
     
     @PostMapping("/login")
     // 要@RequestBody注解之后，mvc框架才会将数据与前端传来的参数关联在一起
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         // 判断是否为空
         if (userLoginRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 在userRegisterRequest中取得数据，再填入userRegister方法
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         // 校验两个参数是否为空，为空直接返回
         if (StringUtils.isAnyBlank(userAccount,userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 调用注册方法
-        return userService.doLogin(userAccount,userPassword, request);
+        User user = userService.doLogin(userAccount, userPassword, request);
+        return ResultUtils.success(user);
     }
     
     @PostMapping("/logout")
     // 要@RequestBody注解之后，mvc框架才会将数据与前端传来的参数关联在一起
-    public Integer userLogout( HttpServletRequest request) {
+    public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         // 判断是否为空
         if (request == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 调用注销方法
-        return userService.userLogout(request);
+        int result = userService.userLogout(request);
+        return ResultUtils.success(result);
     }
     
     /**
@@ -86,20 +96,21 @@ public class UserController {
      * @return 当前用户信息
      */
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request) {
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         // 获取当前用户session
         Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         // 强转
         User currentUser = (User) userObj;
         // 判断用户是否为空
         if (currentUser == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 根据id查询数据库
         Long userId = currentUser.getId();
         // todo 校验用户是否合法
         User user = userService.getById(userId);
-        return userService.getSafetyUser(user);
+        User safetyUser = userService.getSafetyUser(user);
+        return ResultUtils.success(safetyUser);
     }
     
     /**
@@ -108,10 +119,10 @@ public class UserController {
      * @return 查询出的用户
      */
     @GetMapping("/search")
-    public List<User> searchUsers(String userName, HttpServletRequest request) {
+    public BaseResponse<List<User>> searchUsers(String userName, HttpServletRequest request) {
         // 鉴权，是否为管理员
         if (!isAdmin(request)) {
-            return new ArrayList<>();
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         // 判断用户名是否为空
@@ -122,11 +133,12 @@ public class UserController {
         // 返回
         List<User> userList = userService.list(queryWrapper);
         // 将返回值中的密码过滤
-        return userList.stream().map(user -> {
+        List<User> list = userList.stream().map(user -> {
             user.setUserPassword(null);
             // 将脱敏后的用户返回
             return userService.getSafetyUser(user);
         }).collect(Collectors.toList());
+        return ResultUtils.success(list);
     }
     
     /**
@@ -135,18 +147,19 @@ public class UserController {
      * @return
      */
     @PostMapping("/delete")
-    public boolean deleteUser(@RequestBody long id, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request) {
         // 鉴权，是否为管理员
         if (!isAdmin(request)) {
-            return false;
+            throw new BusinessException(ErrorCode.NO_AUTH);
         }
         // 判断id是否小于等于0
         if (id <= 0) {
-            return false;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 返回
         // 框架会自动进行逻辑删除
-        return userService.removeById(id);
+        boolean result = userService.removeById(id);
+        return ResultUtils.success(result);
     }
     
     /**

@@ -1,31 +1,26 @@
-import { addRule, removeRule, rule, updateRule } from '@/services/ant-design-pro/api';
 import { PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns, ProDescriptionsItemProps } from '@ant-design/pro-components';
-import {
-  FooterToolbar,
-  ModalForm,
-  PageContainer,
-  ProDescriptions,
-  ProFormText,
-  ProFormTextArea,
-  ProTable,
-} from '@ant-design/pro-components';
-import { Button, Drawer, Input, message } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Button, message, Input, Drawer } from 'antd';
+import React, { useState, useRef } from 'react';
+import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
+import type { ProColumns, ActionType } from '@ant-design/pro-table';
+import ProTable from '@ant-design/pro-table';
+import { ModalForm, ProFormText, ProFormTextArea } from '@ant-design/pro-form';
+import type { ProDescriptionsItemProps } from '@ant-design/pro-descriptions';
+import ProDescriptions from '@ant-design/pro-descriptions';
 import type { FormValueType } from './components/UpdateForm';
 import UpdateForm from './components/UpdateForm';
-
+import { rule, addRule, updateRule, removeRule } from '@/services/ant-design-pro/api';
 /**
  * @en-US Add node
  * @zh-CN 添加节点
  * @param fields
  */
+
 const handleAdd = async (fields: API.RuleListItem) => {
   const hide = message.loading('正在添加');
+
   try {
-    await addRule({
-      ...fields,
-    });
+    await addRule({ ...fields });
     hide();
     message.success('Added successfully');
     return true;
@@ -35,15 +30,16 @@ const handleAdd = async (fields: API.RuleListItem) => {
     return false;
   }
 };
-
 /**
  * @en-US Update node
  * @zh-CN 更新节点
  *
  * @param fields
  */
+
 const handleUpdate = async (fields: FormValueType) => {
   const hide = message.loading('Configuring');
+
   try {
     await updateRule({
       name: fields.name,
@@ -59,16 +55,17 @@ const handleUpdate = async (fields: FormValueType) => {
     return false;
   }
 };
-
 /**
  *  Delete node
  * @zh-CN 删除节点
  *
  * @param selectedRows
  */
+
 const handleRemove = async (selectedRows: API.RuleListItem[]) => {
   const hide = message.loading('正在删除');
   if (!selectedRows) return true;
+
   try {
     await removeRule({
       key: selectedRows.map((row) => row.key),
@@ -82,6 +79,7 @@ const handleRemove = async (selectedRows: API.RuleListItem[]) => {
     return false;
   }
 };
+
 const TableList: React.FC = () => {
   /**
    * @en-US Pop-up window of new window
@@ -92,12 +90,12 @@ const TableList: React.FC = () => {
    * @en-US The pop-up window of the distribution update window
    * @zh-CN 分布更新窗口的弹窗
    * */
+
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const actionRef = useRef<ActionType>();
   const [currentRow, setCurrentRow] = useState<API.RuleListItem>();
   const [selectedRowsState, setSelectedRows] = useState<API.RuleListItem[]>([]);
-
   /**
    * @en-US International configuration
    * @zh-CN 国际化配置
@@ -163,12 +161,15 @@ const TableList: React.FC = () => {
       valueType: 'dateTime',
       renderFormItem: (item, { defaultRender, ...rest }, form) => {
         const status = form.getFieldValue('status');
+
         if (`${status}` === '0') {
           return false;
         }
+
         if (`${status}` === '3') {
           return <Input {...rest} placeholder={'请输入异常原因！'} />;
         }
+
         return defaultRender(item);
       },
     },
@@ -258,8 +259,10 @@ const TableList: React.FC = () => {
         onVisibleChange={handleModalVisible}
         onFinish={async (value) => {
           const success = await handleAdd(value as API.RuleListItem);
+
           if (success) {
             handleModalVisible(false);
+
             if (actionRef.current) {
               actionRef.current.reload();
             }
@@ -281,9 +284,11 @@ const TableList: React.FC = () => {
       <UpdateForm
         onSubmit={async (value) => {
           const success = await handleUpdate(value);
+
           if (success) {
             handleUpdateModalVisible(false);
             setCurrentRow(undefined);
+
             if (actionRef.current) {
               actionRef.current.reload();
             }
@@ -291,6 +296,7 @@ const TableList: React.FC = () => {
         }}
         onCancel={() => {
           handleUpdateModalVisible(false);
+
           if (!showDetail) {
             setCurrentRow(undefined);
           }
@@ -325,4 +331,5 @@ const TableList: React.FC = () => {
     </PageContainer>
   );
 };
+
 export default TableList;

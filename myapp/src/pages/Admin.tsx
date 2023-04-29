@@ -1,11 +1,13 @@
-import { PageHeaderWrapper } from '@ant-design/pro-components';
 import React from 'react';
+import {PageHeaderWrapper} from '@ant-design/pro-layout';
+
 const Admin: React.FC = (props) => {
   const {children} = props;
   return (
-    <PageHeaderWrapper content={''}>
+    <PageHeaderWrapper>
       {children}
     </PageHeaderWrapper>
   );
 };
+
 export default Admin;

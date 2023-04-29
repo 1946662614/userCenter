@@ -2,6 +2,8 @@ package com.xj.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xj.usercenter.common.ErrorCode;
+import com.xj.usercenter.exception.BusinessException;
 import com.xj.usercenter.service.UserService;
 import com.xj.usercenter.model.domain.User;
 import com.xj.usercenter.mapper.UserMapper;
@@ -43,19 +45,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1.校验
         // 1.1 账号密码，确认密码不为空
         if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword,planetCode)) {
-            // todo 修改为自定义异常类
-            return -1;
+            
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         }
         // 1.2账号大于4
         if (userAccount.length() < 4) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号太短");
         }
         // 1.3密码大于8
         if (userPassword.length() < 8) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户密码太短");
         }
         if (planetCode.length() > 5) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"星球码太长");
         }
         
         // 1.4账户不能包含特殊字符
@@ -63,11 +65,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 正则表达式语法
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 1.5密码和校验密码相同
         if (!userPassword.equals(checkPassword)) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 1.6账户不能重复
         // 通过QueryWrapper比较参数
@@ -76,7 +78,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // count需要传入QueryWrapper参数，根据 Wrapper 条件，查询总记录数
         long count = this.count(queryWrapper);
         if (count > 0) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号已经注册过了！");
         }
     
         // 1.7星球账户不能重复
@@ -86,7 +88,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // count需要传入QueryWrapper参数，根据 Wrapper 条件，查询总记录数
         count = this.count(queryWrapper);
         if (count > 0) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"星球账号已经注册过了！");
         }
         
         // 2.加密
@@ -118,15 +120,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1.校验
         // 1.1 账号密码，确认密码不为空
         if (StringUtils.isAnyBlank(userAccount,userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 1.2账号大于4
         if (userAccount.length() < 4) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 1.3密码大于8
         if (userPassword.length() < 8) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
     
         // 1.4账户不能包含特殊字符
@@ -134,7 +136,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 正则表达式语法
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 2.加密
         // 给加密字段加盐
@@ -156,7 +158,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 用户不存在
         if (user == null) {
             log.info("user login failed, userAccount cannot match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
     
         // 4.用户脱敏
@@ -178,7 +180,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public User getSafetyUser(User originUser) {
         if (originUser == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         User safetyUser = new User();
         safetyUser.setId(originUser.getId());
